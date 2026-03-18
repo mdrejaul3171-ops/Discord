@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raizo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-800 text-white h-screen overflow-hidden">
+
+    <div id="login-screen" class="flex flex-col items-center justify-center min-h-screen bg-gray-900 absolute inset-0 z-50">
+        <h1 class="text-6xl font-bold text-indigo-500 mb-8">Raizo</h1>
+        <p class="mb-8 text-gray-400">Welcome to the new era of chat.</p>
+        <button id="login-btn" class="bg-indigo-500 hover:bg-indigo-600 px-6 py-3 rounded-md font-bold transition-all">
+            Sign In with Google
+        </button>
+    </div>
+
+    <div id="app-screen" class="hidden flex h-screen w-full">
+        
+        <div class="w-16 bg-gray-900 flex flex-col items-center py-4 space-y-4 hidden sm:flex">
+            <div class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-xl cursor-pointer hover:rounded-xl transition-all">R</div>
+            <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center hover:bg-indigo-500 hover:rounded-xl transition-all cursor-pointer">+</div>
+        </div>
+
+        <div class="w-64 bg-gray-800 flex flex-col border-r border-gray-900 hidden md:flex">
+            <div class="p-4 shadow-md bg-gray-800 font-bold text-lg border-b border-gray-900">
+                Raizo Home
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">Text Channels</h3>
+                    <p class="text-gray-300 bg-gray-700 p-2 rounded cursor-pointer"># general</p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase mb-2">Voice Channels</h3>
+                    <p class="text-gray-300 hover:bg-gray-700 p-2 rounded cursor-pointer">🔊 Lobby</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2 overflow-hidden">
+                    <img id="user-avatar" src="" alt="profile" class="w-8 h-8 rounded-full" />
+                    <span id="user-name" class="text-sm font-bold truncate">User</span>
+                </div>
+                <button id="logout-btn" class="text-xs text-red-400 hover:text-red-300">Logout</button>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col bg-gray-700">
+            <div class="md:hidden p-4 bg-gray-900 flex justify-between items-center border-b border-gray-800">
+                <span class="font-bold text-lg text-indigo-400">Raizo</span>
+                <button id="mobile-logout-btn" class="text-xs text-red-400">Logout</button>
+            </div>
+
+            <div class="p-4 shadow-md border-b border-gray-900 font-bold text-lg hidden md:block">
+                # general
+            </div>
+
+            <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-indigo-500 rounded-full flex-shrink-0"></div>
+                    <div>
+                        <span class="font-bold mr-2">System</span>
+                        <p class="text-gray-200">Welcome to Raizo! This UI is ready for your Firebase database.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <form id="chat-form" class="flex bg-gray-600 rounded-lg p-2">
+                    <input 
+                        id="chat-input"
+                        type="text" 
+                        placeholder="Message #general" 
+                        class="flex-1 bg-transparent outline-none text-white px-2"
+                        autocomplete="off"
+                    />
+                    <button type="submit" class="bg-indigo-500 px-4 py-1 rounded text-sm font-bold ml-2">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules directly from the CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // *** REPLACE WITH YOUR ACTUAL FIREBASE CONFIG ***
+        const firebaseConfig = {
+            apiKey: "https://leon-41242-default-rtdb.firebaseio.com",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            databaseURL: "https://leon-41242-default-rtdb.firebaseio.com",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app-screen');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+        const userName = document.getElementById('user-name');
+        const userAvatar = document.getElementById('user-avatar');
+        
+        let currentUser = null;
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+                userName.textContent = user.displayName;
+                userAvatar.src = user.photoURL;
+            } else {
+                // User is signed out
+                currentUser = null;
+                loginScreen.classList.remove('hidden');
+                appScreen.classList.add('hidden');
+            }
+        });
+
+        // Login / Logout Functions
+        loginBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch(error => alert(error.message));
+        });
+
+        const handleLogout = () => { signOut(auth); };
+        logoutBtn.addEventListener('click', handleLogout);
+        mobileLogoutBtn.addEventListener('click', handleLogout);
+
+        // Chat Form Logic (Ready to connect to Firebase)
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            
+            if(text && currentUser) {
+                // Here is where we will push to the database!
+                console.log("Sending message:", text); 
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
