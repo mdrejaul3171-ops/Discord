@@ -137,45 +137,6 @@ export default function App() {
       setIsCheckoutOpen(false); showToast("Order Placed!"); navigate('orders');
     } catch(e) {}
   };
-  const processLogin = async (e) => {
-    e.preventDefault();
-    const name = e.target.name.value; const phone = e.target.phone.value;
-    try {
-      const res = await fetch(DB_URL + 'users.json'); const data = await res.json();
-      let user = null;
-      if(data) { for(let k in data) { if(data[k].phone === phone) { user = { ...data[k], dbKey: k }; break; } } }
-      if(!user) {
-        const uid = `RS${Math.floor(10000+Math.random()*90000)}`;
-        const post = await fetch(DB_URL + 'users.json', { method: 'POST', body: JSON.stringify({ name, phone, userId: uid }) });
-        const postD = await post.json(); user = { name, phone, userId: uid, dbKey: postD.name };
-      }
-      setCurrentUser(user); localStorage.setItem('rsFashionUser', JSON.stringify(user));
-      setIsLoginOpen(false); showToast("Welcome!");
-    } catch(e) { showToast("Login failed", "error"); }
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setUpiScreenshot(ev.target.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const processCheckout = async (e) => {
-    e.preventDefault();
-    const orderData = {
-      userId: currentUser.userId, customerName: currentUser.name,
-      items: checkoutMode === 'single' ? selectedProduct.name : cart.map(i=>i.name).join(", "),
-      totalAmount: checkoutMode === 'single' ? selectedProduct.finalPrice : cart.reduce((t,i)=>t+i.finalPrice,0),
-      status: "Pending", deliveryTime: "Awaiting Confirmation", paymentType: paymentMethod
-    };
-    try {
-      await fetch(DB_URL + 'orders.json', { method: 'POST', body: JSON.stringify(orderData) });
-      setIsCheckoutOpen(false); showToast("Order Placed!"); navigate('orders');
-    } catch(e) {}
-  };
   const renderProductCard = (p) => {
     const finalPrice = p.discount > 0 ? Math.round(p.price - (p.price * (p.discount/100))) : p.price;
     return (
