@@ -1,4 +1,143 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion'; // THE NEW MOTION ENGINE
+import './index.css';
+
+const DB_URL = "https://leon-41242-default-rtdb.firebaseio.com/";
+
+// --- PANDA LOTTIE LINK ---
+const PANDA_URL = "https://lottie.host/8e1e7555-5c02-45e0-b6f2-1b12b504f7f4/M1bC15S3l0.json";
+
+export default function App() {
+  const [products, setProducts] = useState([]);
+  const [currentView, setCurrentView] = useState('home'); 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [upiId, setUpiId] = useState("yourname@upi");
+
+  // --- FETCH REAL DATA FROM FIREBASE ---
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const pRes = await fetch(`${DB_URL}products.json`);
+        const pData = await pRes.json();
+        if (pData) {
+          const loadedProducts = Object.keys(pData).map(key => ({
+            id: key, ...pData[key]
+          }));
+          setProducts(loadedProducts);
+        }
+        const sRes = await fetch(`${DB_URL}settings.json`);
+        const sData = await sRes.json();
+        if (sData && sData.upiId) setUpiId(sData.upiId);
+      } catch (e) { console.error("Firebase Error:", e); }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (isDarkMode) document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+  }, [isDarkMode]);
+  const renderHome = () => (
+    <div className="view-container">
+      <div style={{ background: 'var(--card-bg)', borderRadius: '30px', padding: '50px 20px', textAlign: 'center', marginBottom: '40px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow)' }}>
+        <h1 style={{ fontSize: '36px', marginBottom: '10px' }}>made for play.</h1>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>Discover the softest collection for your little ones.</p>
+        <button className="btn-main" onClick={() => window.scrollTo({top: 600, behavior: 'smooth'})}>Explore Collection</button>
+      </div>
+
+      {/* --- FLOATING PRODUCT GRID --- */}
+      <div className="product-grid">
+        <AnimatePresence>
+          {products.map((p, i) => (
+            <motion.div
+              key={p.id}
+              className="product-card"
+              onClick={() => handleProductClick(p)}
+              initial={{ opacity: 0, y: 30 }} // Starts faded and 30px low
+              animate={{ opacity: 1, y: 0 }}   // Floats up and fades in
+              transition={{ delay: i * 0.1, type: "spring", stiffness: 70 }} // Soft spring animation
+              exit={{ opacity: 0, y: -30 }}    // Fades up and out on removal
+            >
+              {p.discount > 0 && <span className="tag">{p.discount}% OFF</span>}
+              <img src={p.img} alt={p.name} className="product-img" />
+              <div style={{ marginTop: '15px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600' }}>{p.name}</h3>
+                <p style={{ fontWeight: '800', color: 'var(--text-main)', marginTop: '5px' }}>₹{p.price}</p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+// --- LIVE PANDA COMPONENT ---
+function PandaAnimation() {
+  const [Lottie, setLottie] = useState(null);
+
+  useEffect(() => {
+    // Dynamic import to keep the app small
+    import('@lottiefiles/lottie-player').then(setLottie);
+  }, []);
+
+  if (!Lottie) return null;
+
+  return (
+    <lottie-player
+      src={PANDA_URL}
+      background="transparent"
+      speed="1"
+      style={{ width: '150px', height: '150px' }}
+      loop
+      autoplay
+    ></lottie-player>
+  );
+}
+  return (
+    <>
+      <header>
+        <div className="header-icons"><i className="icon-btn fas fa-bars" onClick={() => setIsSidebarOpen(true)}></i></div>
+        <div className="brand-logo brand-font" onClick={() => handleMenuClick('home')}>raizo.</div>
+        <div className="header-icons">
+          <i className={`icon-btn ${isDarkMode ? 'fas fa-sun' : 'fas fa-moon'}`} onClick={() => setIsDarkMode(!isDarkMode)}></i>
+          <div style={{ position: 'relative' }} onClick={() => setCurrentView('cart')}><i className="icon-btn fas fa-shopping-bag"></i>{cart.length > 0 && <span className="cart-badge">{cart.length}</span>}</div>
+        </div>
+      </header>
+
+      {/* --- CUTE PANDA SECTION --- */}
+      {currentView === 'home' && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px', marginBottom: '-20px' }}>
+          <PandaAnimation />
+        </div>
+      )}
+
+      {isSidebarOpen && <div className="modal-overlay" style={{background:'rgba(0,0,0,0.2)'}} onClick={() => setIsSidebarOpen(false)}></div>}
+      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <h2 className="brand-font" style={{marginBottom:'30px'}}>Menu</h2>
+        <div className="sidebar-link" onClick={() => {setCurrentView('home'); setIsSidebarOpen(false);}}><i className="fas fa-home"></i> Shop Home</div>
+        <div className="sidebar-link" onClick={() => {setCurrentView('cart'); setIsSidebarOpen(false);}}><i className="fas fa-shopping-bag"></i> My Bag</div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {currentView === 'home' && renderHome()}
+          {currentView === 'product' && renderProduct()}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ... Cart, Checkout, and Footer code remain the same ... */}
+
+
+import React, { useState, useEffect } from 'react';
 import './index.css';
 
 const DB_URL = "https://leon-41242-default-rtdb.firebaseio.com/";
