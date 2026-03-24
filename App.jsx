@@ -378,18 +378,14 @@ export default function App() {
 
       {isLoginOpen && (<div className="modal" style={{display:'flex'}}><div className="modal-content glass"><span onClick={() => setIsLoginOpen(false)} style={{position:'absolute', top:'15px', right:'20px', fontSize:'24px', cursor:'pointer'}}>&times;</span><h2 className="brand-font" style={{marginBottom:'20px'}}>Login</h2><form onSubmit={processLogin}><input name="name" placeholder="Full Name" required /><input name="phone" placeholder="Phone Number" required /><button type="submit" className="btn-main">Login / Create Account</button></form></div></div>)}
       
-      
-      
-      
       {isCheckoutOpen && (() => {
         const upiLink = `upi://pay?pa=yourname@upi&pn=RS%20Fashion&am=${getFinalTotal()}&cu=INR`;
         const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-       
         return (<div className="modal" style={{display:'flex'}}><div className="modal-content glass"><span onClick={() => setIsCheckoutOpen(false)} style={{position:'absolute', top:'15px', right:'20px', fontSize:'24px', cursor:'pointer'}}>&times;</span><h2 className="brand-font" style={{marginBottom:'20px'}}>Checkout</h2><form onSubmit={processCheckout}><input name="add1" placeholder="Address Line 1" required /><input name="add2" placeholder="Landmark" required /><input name="pin" placeholder="Pincode" required /><div style={{textAlign:'right', fontWeight:'bold', fontSize:'18px', color:'var(--accent)', margin:'15px 0'}}>Total: ₹{getFinalTotal()}</div><div style={{marginBottom:'15px'}}><div onClick={() => setPaymentMethod('COD')} style={{padding:'12px', border:paymentMethod==='COD'?'2px solid var(--accent)':'1px solid var(--border-glass)', borderRadius:'8px', cursor:'pointer', marginBottom:'10px'}}>💵 Cash on Delivery</div><div onClick={() => setPaymentMethod('UPI')} style={{padding:'12px', border:paymentMethod==='UPI'?'2px solid var(--accent)':'1px solid var(--border-glass)', borderRadius:'8px', cursor:'pointer'}}>📱 Pay Online (UPI)</div>{paymentMethod==='UPI' && <div style={{textAlign:'center', marginTop:'15px'}}>{isMobileDevice ? <a href={upiLink} target="_blank" rel="noreferrer" className="btn-main" style={{display:'block', textDecoration:'none', marginBottom:'10px'}}><i className="fas fa-bolt"></i> Open UPI App</a> : <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`} alt="QR" style={{background:'white', padding:'10px', borderRadius:'10px', marginBottom:'10px'}}/>}<label style={{display:'block', padding:'15px', border:'1px dashed var(--border-glass)', borderRadius:'8px', cursor:'pointer'}}><i className="fas fa-upload"></i> Upload Screenshot<input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}}/></label>{upiScreenshot && <img src={upiScreenshot} style={{width:'100%', marginTop:'10px', borderRadius:'8px'}} alt="Proof"/>}</div></div><button type="submit" className="btn-main">Confirm Order</button></form></div></div>);
       })()}
 
       <div className={`toast-notification glass ${toast.show ? 'show' : ''}`} style={{background:'var(--accent)', color:'white', border:'none'}}>{toast.msg}</div>
-      <footer style={{textAlign:'center', padding:'40px 20px', opacity:0.6, fontSize:'12px'}}><p>© 2026 RS Fashion. Developed by Robiul Islam.</p></footer>
+      <footer style={{textAlign:'center', padding:'40px 20px', opacity:0.6, fontSize:'12px'}}><p>© 2026 RS Fashion. Built on clouds.</p></footer>
     </>
   );
 }
