@@ -8,11 +8,14 @@ const heroImages = [
   "https://images.unsplash.com/photo-1589465885857-44edb59bbff2?auto=format&fit=crop&q=80"
 ];
 
+// WhatsApp Support Number
+const WA_NUMBER = "910000000000"; 
+
 export default function App() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentView, setCurrentView] = useState('home'); // added 'about' here
+  const [currentView, setCurrentView] = useState('home'); 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,6 +32,11 @@ export default function App() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [upiScreenshot, setUpiScreenshot] = useState('');
 
+  // ✨ NOTIFICATION SYSTEM STATE ✨
+  const [notifications, setNotifications] = useState([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [readNotifs, setReadNotifs] = useState([]);
+
   useEffect(() => {
     const isDark = localStorage.getItem('rsDarkModeMain') === 'true';
     setIsDarkMode(isDark);
@@ -38,12 +46,27 @@ export default function App() {
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
     const savedCart = localStorage.getItem('rsFashionCart');
     if (savedCart) setCart(JSON.parse(savedCart));
+    const savedReads = localStorage.getItem('rsReadNotifs');
+    if (savedReads) setReadNotifs(JSON.parse(savedReads));
 
     const fetchDB = async () => {
       try {
         const res = await fetch(DB_URL + 'products.json');
         const data = await res.json();
         if(data) setProducts(Object.keys(data).map(k => ({ id: k, ...data[k] })));
+
+        // Fetch Notifications from DB
+        const notifRes = await fetch(DB_URL + 'notifications.json');
+        const notifData = await notifRes.json();
+        if(notifData) {
+          setNotifications(Object.keys(notifData).map(k => ({ id: k, ...notifData[k] })).reverse());
+        } else {
+          // Pre-load default notifications if DB is empty
+          setNotifications([
+            { id: 'n1', title: '🎁 Welcome to RS Fashion!', message: 'Use coupon code RAIZO10 to get ₹100 off your first purchase!', date: 'Just now', icon: 'fas fa-gift' },
+            { id: 'n2', title: '🚚 Lightning Fast Delivery', message: 'All orders are now processed and shipped within 24 hours.', date: 'System', icon: 'fas fa-shipping-fast' }
+          ]);
+        }
       } catch (e) { console.error(e); }
     };
     fetchDB();
@@ -75,19 +98,34 @@ export default function App() {
     if(view === 'profile') fetchMyOrders();
   };
 
+  const handleSearchIconClick = () => {
+    navigate('shop');
+    setTimeout(() => document.getElementById('main-search-input')?.focus(), 100);
+  };
+
+  // 🔔 NOTIFICATION OPEN LOGIC 🔔
+  const unreadCount = notifications.filter(n => !readNotifs.includes(n.id)).length;
+  const handleOpenNotifs = () => {
+    setIsNotifOpen(true);
+    // Mark all current notifications as read
+    const allIds = notifications.map(n => n.id);
+    setReadNotifs(allIds);
+    localStorage.setItem('rsReadNotifs', JSON.stringify(allIds));
+  };
   const addToCart = (product) => {
     if(product.status === 'Out of Stock' || product.stock <= 0) return showToast("⚠️ Sorry, Sold Out!", "error");
     const finalPrice = product.discount > 0 ? Math.round(product.price - (product.price * (product.discount/100))) : product.price;
     const newCart = [...cart, { ...product, finalPrice }];
     setCart(newCart);
     localStorage.setItem('rsFashionCart', JSON.stringify(newCart));
-    showToast("🛍️ Item added to cart!", "success");
+    showToast("🛍️ Awesome! Item added to cart!", "success");
     if(currentUser?.dbKey) fetch(`${DB_URL}users/${currentUser.dbKey}.json`, { method: 'PATCH', body: JSON.stringify({ cart: newCart }) });
   };
 
   const removeFromCart = (index) => {
     const newCart = [...cart]; newCart.splice(index, 1);
     setCart(newCart); localStorage.setItem('rsFashionCart', JSON.stringify(newCart));
+    showToast("🗑️ Item removed", "info");
   };
 
   const getCartTotal = () => cart.reduce((t, item) => t + parseInt(item.finalPrice || item.price), 0);
@@ -95,6 +133,14 @@ export default function App() {
     const base = checkoutMode === 'single' ? (selectedProduct.finalPrice || selectedProduct.price) : getCartTotal();
     return Math.max(0, base - discountAmount);
   };
+
+  const getStatusColor = (status) => {
+    const s = status.toLowerCase();
+    if(s.includes('pending')) return 'var(--warning)';
+    if(s.includes('reject') || s.includes('cancel')) return 'var(--error)';
+    return 'var(--success)';
+  };
+
   const fetchMyOrders = async () => {
     if(!currentUser) return;
     try {
@@ -119,8 +165,8 @@ export default function App() {
         const postData = await postRes.json(); userObj.dbKey = postData.name;
       }
       setCurrentUser(userObj); localStorage.setItem('rsFashionUser', JSON.stringify(userObj));
-      setIsLoginOpen(false); navigate('profile'); showToast("✅ Logged in successfully!");
-    } catch(e) { showToast("Network Error", "error"); }
+      setIsLoginOpen(false); navigate('profile'); showToast("🎉 Welcome back! Logged in.", "success");
+    } catch(e) { showToast("⚠️ Network Error", "error"); }
   };
 
   const handleImageUpload = (e) => {
@@ -134,7 +180,7 @@ export default function App() {
           canvas.width = 400; canvas.height = img.height * scale;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           setUpiScreenshot(canvas.toDataURL('image/jpeg', 0.6));
-          showToast("Screenshot Attached! ✅");
+          showToast("📸 Screenshot Attached!", "info");
         };
         img.src = event.target.result;
       };
@@ -144,8 +190,8 @@ export default function App() {
 
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === 'RAIZO10') {
-      setDiscountAmount(100); showToast("Coupon Applied!");
-    } else { showToast("Invalid Coupon", "error"); }
+      setDiscountAmount(100); showToast("🎁 Coupon Applied! You saved ₹100", "success");
+    } else { showToast("❌ Invalid Coupon Code", "error"); }
   };
 
   const processCheckout = async (e) => {
@@ -163,12 +209,11 @@ export default function App() {
       await fetch(DB_URL + 'orders.json', { method: 'POST', body: JSON.stringify(orderData) });
       setIsCheckoutOpen(false); setUpiScreenshot(''); setDiscountAmount(0); setCouponCode('');
       if(checkoutMode === 'cart') { setCart([]); localStorage.setItem('rsFashionCart', JSON.stringify([])); }
-      if (window.confetti) window.confetti({ particleCount: 100, spread: 70 });
-      showToast("🎉 Order Placed Successfully!"); navigate('profile');
-    } catch(e) { showToast("Failed to place order.", "error"); }
+      if (window.confetti) window.confetti({ particleCount: 150, spread: 80 });
+      showToast("🚀 Order Placed Successfully!", "success"); navigate('profile');
+    } catch(e) { showToast("❌ Failed to place order.", "error"); }
   };
 
-  // RESTORED VANILLA PRODUCT CARD RENDERER
   const renderProductCard = (p) => {
     const soldOut = p.status === 'Out of Stock' || p.stock <= 0;
     const finalPrice = p.discount > 0 ? Math.round(p.price - (p.price * (p.discount/100))) : p.price;
@@ -194,28 +239,37 @@ export default function App() {
           <div className="brand-logo" onClick={() => navigate('home')}>RS FASHION</div>
         </div>
         <div className="header-icons">
-          <i className={isDarkMode ? 'fas fa-sun icon-btn' : 'fas fa-moon icon-btn'} onClick={toggleTheme}></i> 
+          {/* THE NEW BELL ICON */}
+          <div className="icon-btn" style={{position:'relative'}} onClick={handleOpenNotifs}>
+            <i className={`fas fa-bell ${unreadCount > 0 ? 'shake-anim' : ''}`}></i>
+            {unreadCount > 0 && <span className="cart-badge">{unreadCount}</span>}
+          </div>
+          
           <i className="fas fa-search icon-btn" onClick={() => {navigate('shop'); setTimeout(() => document.getElementById('main-search-input')?.focus(), 100);}}></i> 
           <i className="far fa-user icon-btn" onClick={() => currentUser ? navigate('profile') : setIsLoginOpen(true)}></i> 
           <div className="icon-btn" style={{position:'relative'}} onClick={() => navigate('cart')}>
-            <i className="fas fa-shopping-bag"></i><span className="cart-badge">{cart.length}</span>
+            <i className="fas fa-shopping-bag"></i>{cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
           </div>
         </div>
       </header>
 
-      {/* FULL SIDEBAR */}
+      {/* FULL SIDEBAR WITH REAL WHATSAPP REDIRECT */}
       {isSidebarOpen && <div className="sidebar-overlay" style={{display:'block'}} onClick={() => setIsSidebarOpen(false)}></div>}
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header"><h3 className="brand-font">Menu</h3><i className="fas fa-times" style={{fontSize:'20px', cursor:'pointer', color:'var(--text-muted)'}} onClick={() => setIsSidebarOpen(false)}></i></div>
         <div className="sidebar-links">
+          <div onClick={handleSearchIconClick}><i className="fas fa-search" style={{width:'20px'}}></i> Search</div>
           <div onClick={() => navigate('home')}><i className="fas fa-home" style={{width:'20px'}}></i> Home</div>
           <div onClick={() => navigate('shop')}><i className="fas fa-tshirt" style={{width:'20px'}}></i> All Products</div>
           <div onClick={() => navigate('cart')}><i className="fas fa-shopping-cart" style={{width:'20px'}}></i> Cart</div>
           <div onClick={() => currentUser ? navigate('profile') : setIsLoginOpen(true)}><i className="fas fa-user" style={{width:'20px'}}></i> My Profile</div>
-          <div onClick={() => alert("Live Chat coming soon!")}><i className="fas fa-headset" style={{width:'20px'}}></i> Live Support</div>
+          
+          <div onClick={() => {setIsSidebarOpen(false); window.open(`https://wa.me/${WA_NUMBER}?text=Hi%20RS%20Fashion!%20I%20need%20help.`, '_blank');}}>
+            <i className="fab fa-whatsapp" style={{width:'20px', color:'#25D366', fontSize:'18px'}}></i> Live Support
+          </div>
+          
           <div onClick={() => window.location.href='mailto:robiulislam786786u@gmail.com'}><i className="fas fa-envelope" style={{width:'20px'}}></i> Contact Us</div>
-          {/* RESTORED ABOUT DEVELOPER LINK */}
-          <div onClick={() => navigate('about')}><i className="fas fa-info-circle" style={{width:'20px'}}></i> About Developer</div>
+          <div onClick={() => {setIsSidebarOpen(false); navigate('about');}}><i className="fas fa-code" style={{width:'20px'}}></i> About Developer</div>
         </div>
         <div style={{padding: '20px', fontSize: '12px', borderTop:'1px solid var(--border-color)'}}>
           {currentUser ? <><span style={{color:'var(--text-muted)'}}>Logged in as </span><b>{currentUser.name}</b><br/>ID: {currentUser.userId}</> : 'Not Logged In'}
@@ -233,7 +287,6 @@ export default function App() {
               ))}
             </div>
             
-            {/* RESTORED EXACT CATEGORY CIRCLES */}
             <h2 className="section-title">Shop by Category</h2>
             <div className="categories">
               <div className="category-item" onClick={() => navigate('shop')}><img src="https://images.unsplash.com/photo-1589465885857-44edb59bbff2?auto=format&fit=crop&q=80&w=150" className="category-img" alt="Chiffon"/><p className="category-name">Chiffon</p></div>
@@ -311,19 +364,23 @@ export default function App() {
               <h3>{currentUser.name}</h3><p style={{color:'var(--text-muted)', fontSize:'12px'}}>User ID: <strong>{currentUser.userId}</strong></p>
               <div style={{marginTop:'25px', textAlign:'left'}}>
                 <h3 style={{fontSize:'18px', borderBottom:'1px solid var(--border-color)', paddingBottom:'10px', marginBottom:'15px'}}>My Orders</h3>
+                
+                {/* 🎨 DYNAMIC COLORED BADGES RESTORED! */}
                 {orders.length === 0 ? <p>No orders yet.</p> : orders.map((o, i) => (
-                  <div key={i} style={{background:'var(--card-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)'}}>
-                    <div style={{display:'flex', justifyContent:'space-between'}}><b>{o.items}</b><span style={{background:'var(--accent)', color:'white', padding:'4px 10px', borderRadius:'4px', fontSize:'11px'}}>{o.status}</span></div>
-                    <p style={{fontSize:'12px', marginTop:'10px', color:'var(--text-muted)'}}>Amount: ₹{o.totalAmount} ({o.paymentType})</p>
+                  <div key={i} style={{background:'var(--card-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)', borderLeft: `4px solid ${getStatusColor(o.status)}`}}>
+                    <div style={{display:'flex', justifyContent:'space-between'}}>
+                      <b style={{fontSize:'14px'}}>{o.items}</b>
+                      <span style={{background: getStatusColor(o.status), color:'white', padding:'4px 10px', borderRadius:'4px', fontSize:'11px', fontWeight: 'bold'}}>{o.status}</span>
+                    </div>
+                    <p style={{fontSize:'12px', marginTop:'10px', color:'var(--text-muted)'}}>Amount: ₹{o.totalAmount} <span style={{background: o.paymentType==='UPI'?'#6528F7':'#333', color:'white', padding:'2px 6px', borderRadius:'4px', fontSize:'9px', marginLeft:'5px'}}>{o.paymentType}</span></p>
                   </div>
                 ))}
               </div>
-              <button onClick={() => {setCurrentUser(null); localStorage.removeItem('rsFashionUser'); navigate('home');}} style={{marginTop:'20px', padding:'12px', background:'var(--error)', color:'white', border:'none', borderRadius:'5px', width:'100%', fontWeight:'bold', cursor:'pointer'}}>Logout</button>
+              <button onClick={() => {setCurrentUser(null); localStorage.removeItem('rsFashionUser'); navigate('home'); showToast("👋 Logged out successfully", "info");}} style={{marginTop:'20px', padding:'12px', background:'var(--error)', color:'white', border:'none', borderRadius:'5px', width:'100%', fontWeight:'bold', cursor:'pointer'}}>Logout</button>
             </div>
           </motion.div>
         )}
 
-        {/* RESTORED ABOUT DEVELOPER PAGE */}
         {currentView === 'about' && (
           <motion.div className="view-container" initial={{opacity:0}} animate={{opacity:1}}>
             <div className="about-container">
@@ -342,6 +399,30 @@ export default function App() {
         )}
       </div>
 
+      {/* 🔔 THE NEW NOTIFICATIONS INBOX MODAL 🔔 */}
+      {isNotifOpen && (
+        <div className="modal" style={{display:'flex'}}><div className="modal-content" style={{padding: '20px', textAlign: 'left', maxHeight:'80vh', overflowY:'auto'}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+            <h2 className="brand-font" style={{fontSize:'22px'}}>Notifications</h2>
+            <i className="fas fa-times" style={{cursor:'pointer', fontSize:'22px', color:'var(--text-muted)'}} onClick={() => setIsNotifOpen(false)}></i>
+          </div>
+          {notifications.length === 0 ? <p style={{textAlign:'center', color:'var(--text-muted)', padding:'20px 0'}}>No new notifications.</p> : (
+            notifications.map(n => (
+              <div key={n.id} style={{padding:'15px', borderBottom:'1px solid var(--border-color)', background: 'var(--light-bg)', borderRadius:'8px', marginBottom:'10px'}}>
+                <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'5px'}}>
+                  <div style={{width:'30px', height:'30px', background:'var(--accent)', color:'white', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                    <i className={n.icon || "fas fa-bell"} style={{fontSize:'12px'}}></i>
+                  </div>
+                  <h4 style={{fontSize:'14px', fontWeight:'600'}}>{n.title || 'New Update'}</h4>
+                </div>
+                <p style={{fontSize:'13px', color:'var(--text-muted)', lineHeight:'1.4', marginTop:'8px'}}>{n.message}</p>
+                {n.date && <p style={{fontSize:'10px', color:'#aaa', marginTop:'8px'}}>{n.date}</p>}
+              </div>
+            ))
+          )}
+        </div></div>
+      )}
+
       {/* LOGIN MODAL */}
       {isLoginOpen && (
         <div className="modal" style={{display:'flex'}}><div className="modal-content">
@@ -355,7 +436,7 @@ export default function App() {
         </div></div>
       )}
 
-      {/* CUSTOM EMOJI CHECKOUT MODAL */}
+      {/* CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="modal" style={{display:'flex'}}><div className="modal-content" style={{textAlign:'center', padding: '25px 20px'}}>
           <span className="close-modal" onClick={() => setIsCheckoutOpen(false)}>&times;</span>
@@ -392,7 +473,7 @@ export default function App() {
                   <div style={{fontSize: '22px', display: 'flex', alignItems: 'center'}}>📱<span style={{color: '#f1c40f', fontSize:'18px'}}>⚡</span></div>
                   <div>
                     <p style={{fontWeight: 'bold', fontSize: '14px', marginBottom: '6px', color: 'var(--text-main)'}}>Pay Online (UPI)</p>
-                    <div style={{display: 'flex', gap: '6px'}}>
+                                     <div style={{display: 'flex', gap: '6px'}}>
                       <span style={{fontSize: '9px', background: '#fff', color: '#000', padding: '2px 5px', borderRadius: '3px', fontWeight: 'bold'}}>GPay</span>
                       <span style={{fontSize: '9px', background: '#fff', color: '#000', padding: '2px 5px', borderRadius: '3px', fontWeight: 'bold'}}>PhonePe</span>
                       <span style={{fontSize: '9px', background: '#fff', color: '#000', padding: '2px 5px', borderRadius: '3px', fontWeight: 'bold'}}>Paytm</span>
@@ -426,7 +507,11 @@ export default function App() {
         </div></div>
       )}
 
-      <div className={`toast-notification ${toast.show ? 'show' : ''}`} style={{background: toast.type==='error'?'var(--error)':'var(--success)', color:'white'}}>{toast.msg}</div>
+      {/* 💬 FLOATING WHATSAPP BUTTON */}
+      <div className="floating-wa" onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=Hi%20RS%20Fashion!`, '_blank')}><i className="fab fa-whatsapp"></i></div>
+
+      {/* ✨ CARTOON COLORFUL TOAST */}
+      <div className={`toast-notification ${toast.show ? 'show' : ''}`} style={{background: toast.type==='error'?'var(--error)':(toast.type==='info'?'var(--info)':'var(--success)'), color:'white'}}>{toast.msg}</div>
 
       <footer style={{ background: '#111', color: '#fff', textAlign: 'center', padding: '50px 20px', marginTop: '40px' }}>
         <h2 className="brand-font" style={{ letterSpacing: '2px', marginBottom: '10px' }}>RS FASHION</h2>
