@@ -464,28 +464,31 @@ l-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
           </div>
         )}
       </div>
+
+
+
+
       {modalType === 'order-details' && modalData && (
-        <div className="modal-overlay" style={{display:'flex'}}>
-          <div className="modal-content" style={{maxWidth:'500px'}}>
+        <div className="modal-overlay" style={{display:'flex', position:'fixed', inset:0, width:'100vw', height:'100vh', backgroundColor:'rgba(0,0,0,0.85)', zIndex:999999, alignItems:'center', justifyContent:'center'}}>
+          <div className="modal-content" style={{maxWidth:'500px', width:'90%', maxHeight:'85vh', overflowY:'auto', backgroundColor:'var(--card-bg)', padding:'25px', borderRadius:'12px', border:'1px solid var(--border-color)', position:'relative'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid var(--border-color)', paddingBottom:'15px', marginBottom:'20px'}}>
-              <h2 style={{fontFamily:'Playfair Display', color:'var(--primary)'}}>📦 Shipping Details</h2>
-              <button onClick={()=>setModalType(null)} style={{background:'none', border:'none', fontSize:'24px', cursor:'pointer', color:'#f64e60'}}><i className="fas fa-times-circle"></i></button>
+              <h2 style={{fontFamily:'Playfair Display', color:'var(--primary)', margin:0}}>📦 Shipping Details</h2>
+              <button onClick={()=>setModalType(null)} style={{background:'none', border:'none', fontSize:'24px', cursor:'pointer', color:'#f64e60', padding:0}}><i className="fas fa-times-circle"></i></button>
             </div>
             <div style={{fontSize:'15px', lineHeight:1.6}}>
               <div style={{background:'var(--input-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)'}}>
-                <h4 style={{color:'var(--primary)', marginBottom:'10px'}}><i className="fas fa-user"></i> Customer Info</h4>
-                <p><b>Name:</b> {modalData.customerName || 'N/A'}</p>
-                <p><b>Phone:</b> <a href={`tel:${modalData.phone}`} style={{color:'#3699ff', textDecoration:'none'}}>{modalData.phone || 'N/A'}</a></p>
+                <h4 style={{color:'var(--primary)', margin:'0 0 10px 0'}}><i className="fas fa-user"></i> Customer Info</h4>
+                <p style={{margin:0}}><b>Name:</b> {modalData.customerName || 'N/A'}</p>
+                <p style={{margin:0}}><b>Phone:</b> <a href={`tel:${modalData.phone}`} style={{color:'#3699ff', textDecoration:'none'}}>{modalData.phone || 'N/A'}</a></p>
               </div>
               <div style={{background:'var(--input-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)'}}>
-                <h4 style={{color:'var(--primary)', marginBottom:'10px'}}><i className="fas fa-map-marker-alt"></i> Delivery Address</h4>
-                <p>{modalData.address || 'N/A'}</p>
+                <h4 style={{color:'var(--primary)', margin:'0 0 10px 0'}}><i className="fas fa-map-marker-alt"></i> Delivery Address</h4>
+                <p style={{margin:0}}>{modalData.address || 'N/A'}</p>
               </div>
               <div style={{background:'var(--input-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)'}}>
-                <h4 style={{color:'var(--primary)', marginBottom:'10px'}}><i className="fas fa-shopping-bag"></i> Order Summary</h4>
-                <p><b>Items:</b> {typeof modalData.items === 'string' ? modalData.items : JSON.stringify(modalData.items)}</p>
+                <h4 style={{color:'var(--primary)', margin:'0 0 10px 0'}}><i className="fas fa-shopping-bag"></i> Order Summary</h4>
+                <p style={{margin:0}}><b>Items:</b> {typeof modalData.items === 'string' ? modalData.items : JSON.stringify(modalData.items)}</p>
                 
-                {/* Indestructible Image Matcher */}
                 {(() => {
                   try {
                     if (typeof modalData.items !== 'string') return null;
@@ -497,7 +500,7 @@ l-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
                         {matched.map((p,i)=>(
                           <div key={i} style={{textAlign:'center', minWidth:'70px'}}>
                             <a href={p.img} target="_blank" rel="noreferrer"><img src={p.img} style={{width:'60px', height:'60px', objectFit:'cover', borderRadius:'6px', border:'2px solid var(--primary)'}} alt=""/></a>
-                            <p style={{fontSize:'10px', fontWeight:'bold', marginTop:'4px', maxWidth:'70px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{p.name}</p>
+                            <p style={{fontSize:'10px', fontWeight:'bold', margin:'4px 0 0 0', maxWidth:'70px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{p.name}</p>
                           </div>
                         ))}
                       </div>
@@ -505,21 +508,17 @@ l-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
                   } catch(e) { return null; }
                 })()}
 
-                <p style={{marginTop:'10px'}}><b>Total Amount:</b> ₹{modalData.totalAmount || 0}</p>
-                <p><b>Payment Mode:</b> <span style={{background:'#333', color:'white', padding:'4px 8px', borderRadius:'4px', fontSize:'11px', textTransform:'uppercase'}}>{modalData.paymentType || 'COD'}</span></p>
+                <p style={{margin:'10px 0 0 0'}}><b>Total Amount:</b> ₹{modalData.totalAmount || 0}</p>
+                <p style={{margin:0}}><b>Payment Mode:</b> <span style={{background:'#333', color:'white', padding:'4px 8px', borderRadius:'4px', fontSize:'11px', textTransform:'uppercase'}}>{modalData.paymentType || 'COD'}</span></p>
               </div>
               {modalData.paymentType === 'UPI' && modalData.upiScreenshot && (
                 <div style={{background:'var(--input-bg)', padding:'15px', borderRadius:'8px', marginBottom:'15px', border:'1px solid var(--border-color)', textAlign:'center'}}>
-                  <h4 style={{color:'#6528F7', marginBottom:'10px'}}><i className="fas fa-receipt"></i> Payment Screenshot</h4>
+                  <h4 style={{color:'#6528F7', margin:'0 0 10px 0'}}><i className="fas fa-receipt"></i> Payment Screenshot</h4>
                   <img src={modalData.upiScreenshot} style={{width:'100%', maxWidth:'250px', borderRadius:'8px', border:'2px solid #ddd', cursor:'pointer'}} onClick={()=>window.open(modalData.upiScreenshot)} alt=""/>
                 </div>
               )}
-
-
-
-
-                          {modalData.status === 'Pending' && (
-                <button onClick={async ()=>{await updateOrder(modalData.id, 'status', 'Accepted'); setModalType(null);}} style={{width:'100%', padding:'15px', marginTop:'15px', background:'#1bc5bd', color:'white', border:'none', borderRadius:'8px', fontWeight:'bold', fontSize:'16px', cursor:'pointer'}}>
+              {modalData.status === 'Pending' && (
+                <button type="button" onClick={async ()=>{await updateOrder(modalData.id, 'status', 'Accepted'); setModalType(null);}} style={{width:'100%', padding:'15px', marginTop:'15px', background:'#1bc5bd', color:'white', border:'none', borderRadius:'8px', fontWeight:'bold', fontSize:'16px', cursor:'pointer'}}>
                   <i className="fas fa-check-circle"></i> Accept Order
                 </button>
               )}
@@ -527,7 +526,11 @@ l-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
           </div>
         </div>
       )}
+        
 
+
+
+        
       {modalType === 'confirm' && modalData && (
         <div className="modal-overlay" style={{display:'flex'}}><div className="modal-content" style={{maxWidth:'350px', textAlign:'center'}}><div style={{fontSize:'40px', marginBottom:'15px'}}>🤔</div><h3 style={{marginBottom:'20px'}}>{modalData.msg}</h3><div style={{display:'flex', gap:'10px'}}><button className="btn-primary" style={{background:'#ccc', flex:1}} onClick={()=>setModalType(null)}>Cancel</button><button className="btn-primary" style={{background:'#f64e60', flex:1}} onClick={()=>{modalData.action(); setModalType(null);}}>Yes</button></div></div></div>
       )}
