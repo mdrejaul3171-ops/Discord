@@ -134,24 +134,79 @@ export default function App() {
     try { await fetch(DB_URL + 'orders/' + id + '.json', { method: 'PATCH', body: JSON.stringify({ [field]: value }) }); fetchData(); } catch(e) {}
   };
 
-  const viewFullOrder = (dbKey) => { setModalData({ id: dbKey, ...orders[dbKey] }); setModalType('order-details'); };
-  const handleAddProduct = async (e) => {
+
+
+
+
+
+
+  
+    const handleAddProduct = async (e) => {
     e.preventDefault();
-    if (!e.target.p_images.files || e.target.p_images.files.length === 0) return showToastMsg("⚠️ Select at least 1 image!", "error");
-    const btn = document.getElementById('submitBtn'); btn.innerHTML = "Uploading..."; btn.disabled = true;
+    const imageInput = document.getElementById('p_images');
+    if (!imageInput.files || imageInput.files.length === 0) return showToastMsg("⚠️ Select at least 1 image!", "error");
+    
+    const btn = document.getElementById('submitBtn'); 
+    btn.innerHTML = "Uploading..."; 
+    btn.disabled = true;
+    
     try {
       let b64Array = [];
-      for (let i = 0; i < e.target.p_images.files.length; i++) {
-        let b64 = await new Promise((res) => { const reader = new FileReader(); reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); res(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; }; reader.readAsDataURL(e.target.p_images.files[i]); });
+      for (let i = 0; i < imageInput.files.length; i++) {
+        let b64 = await new Promise((res) => { 
+          const reader = new FileReader(); 
+          reader.onload = (ev) => { 
+            const img = new Image(); 
+            img.onload = () => { 
+              const canvas = document.createElement('canvas'); 
+              const scale = 500 / img.width; 
+              canvas.width = 500; 
+              canvas.height = img.height * scale; 
+              canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); 
+              res(canvas.toDataURL('image/jpeg', 0.7)); 
+            }; 
+            img.src = ev.target.result; 
+          }; 
+          reader.readAsDataURL(imageInput.files[i]); 
+        });
         b64Array.push(b64);
       }
-      const productData = { name: e.target.p_name.value, price: parseInt(e.target.p_price.value), discount: e.target.p_discount.value || 0, coupon: e.target.p_coupon.value || "", paymentMode: e.target.p_paymentMode.value, stock: parseInt(e.target.p_stock.value), status: e.target.p_status.value, img: b64Array[0], gallery: b64Array };
+      
+      const productData = { 
+        name: document.getElementById('p_name').value, 
+        price: parseInt(document.getElementById('p_price').value), 
+        discount: document.getElementById('p_discount').value || 0, 
+        coupon: document.getElementById('p_coupon').value || "", 
+        paymentMode: document.getElementById('p_paymentMode').value, 
+        stock: parseInt(document.getElementById('p_stock').value), 
+        status: document.getElementById('p_status').value, 
+        img: b64Array[0], 
+        gallery: b64Array 
+      };
+      
       await fetch(DB_URL + 'products.json', { method: 'POST', body: JSON.stringify(productData) });
-      showToastMsg("🎉 Product Published!", "success"); e.target.reset(); fetchData(); setView('products-view');
-    } catch (err) {}
-    btn.innerHTML = "Publish to Live Website"; btn.disabled = false;
+      showToastMsg("🎉 Product Published!", "success"); 
+      e.target.reset(); 
+      
+      // Clears the image preview boxes after successful upload
+      const previewDiv = document.getElementById('multi-image-preview');
+      if(previewDiv) previewDiv.innerHTML = '';
+      
+      fetchData(); 
+      setView('products-view');
+    } catch (err) { 
+      showToastMsg("Error publishing product", "error"); 
+    }
+    
+    btn.innerHTML = "Publish to Live Website"; 
+    btn.disabled = false;
   };
 
+
+
+
+
+  
   const fetchChatList = async () => { try { let res = await fetch(DB_URL + 'chats.json'); let data = await res.json(); if(data) setChats(data); if(activeChatUserId) fetchAdminMessages(activeChatUserId); } catch(e) {} };
   const fetchAdminMessages = async (userId) => { try { let res = await fetch(`${DB_URL}chats/${userId}/messages.json`); let msgs = await res.json(); if(msgs) setChatMessages(msgs); } catch(e) {} };
   const sendAdminMessage = async () => {
