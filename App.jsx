@@ -380,22 +380,15 @@ export default function App() {
 
 
         
-        {view === 'orders-view' && (
-          <div className="view-section active"><div className="card"><div className="card-header"><h3>Order Management</h3><button className="btn-primary" onClick={fetchData}>Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Customer</th><th>Items & Total</th><th>Status</th><th>Delivery</th></tr></thead><tbody>
-            {Object.keys(orders).reverse().map(key => {
-              const o = orders[key]; const sc = o.status === 'Pending' ? '#ffa800' : (o.status === 'Rejected' ? 'red' : '#1bc5bd');
-              return (
-                <tr key={key}>
-                  <td><b>{o.customerName}</b><br/><span style={{fontSize:'11px', color:'#888'}}>{o.phone}</span></td>
-                  <td>{o.items}<br/><b style={{color:'var(--primary)'}}>₹{o.totalAmount}</b></td>
-                  <td><select value={o.status} onChange={(e) => updateOrder(key, 'status', e.target.value)} style={{padding:'5px', border:`1px solid ${sc}`, fontWeight:'bold', borderRadius:'4px', marginBottom:'5px'}}><option value="Pending">Pending</option><option value="Accepted">Accepted</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Rejected">Rejected</option></select></td>
-                  <td><button onClick={() => viewFullOrder(key)} className="btn-primary" style={{fontSize:'11px', width:'100%', marginBottom:'5px', background:'#8950fc'}}><i className="fas fa-eye"></i> Show Details</button><input type="text" defaultValue={o.deliveryTime || ''} onBlur={(e) => updateOrder(key, 'deliveryTime', e.target.value)} style={{padding:'5px', width:'100%', marginBottom:'5px'}} placeholder="e.g. In 7 days"/><button onClick={() => updateOrder(key, 'save', '')} className="btn-primary" style={{fontSize:'11px', width:'100%'}}><i className="fas fa-save"></i> Save</button></td>
-                </tr>
-              );
-            })}
-          </tbody></table></div></div></div>
-        )}
+        
 
+
+
+
+
+
+
+        
         {view === 'chat-view' && (
           <div className="view-section active"><div className="card" style={{marginBottom:0}}><div className="card-header"><h3>💬 Customer Support</h3><button className="btn-primary" onClick={fetchChatList}>Refresh</button></div><div className="chat-layout">
             <div className="chat-list">
@@ -422,7 +415,27 @@ export default function App() {
             <div className="card">
               <div className="card-header"><h3>Admin Settings</h3></div>
               <div className="form-grid">
-                <div className="form-group full-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
+                <div className="form-group ful        {view === 'orders-view' && (
+          <div className="view-section active"><div className="card"><div className="card-header"><h3>Order Management</h3><button className="btn-primary" onClick={fetchData}>Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Customer</th><th>Items & Total</th><th>Status</th><th>Delivery</th></tr></thead><tbody>
+            {Object.keys(orders).reverse().map(key => {
+              const o = orders[key]; const sc = o.status === 'Pending' ? '#ffa800' : (o.status === 'Rejected' ? 'red' : '#1bc5bd');
+              return (
+                <tr key={key}>
+                  <td><b>{o.customerName}</b><br/><span style={{fontSize:'11px', color:'#888'}}>{o.phone}</span></td>
+                  <td>{o.items}<br/><b style={{color:'var(--primary)'}}>₹{o.totalAmount}</b></td>
+                  <td><select value={o.status} onChange={(e) => updateOrder(key, 'status', e.target.value)} style={{padding:'5px', border:`1px solid ${sc}`, fontWeight:'bold', borderRadius:'4px', marginBottom:'5px'}}><option value="Pending">Pending</option><option value="Accepted">Accepted</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Rejected">Rejected</option></select></td>
+                  <td>
+                    {/* The Foolproof Button Fix is right here 👇 */}
+                    <button onClick={() => { setModalData({ id: key, ...orders[key] }); setModalType('order-details'); }} className="btn-primary" style={{fontSize:'11px', width:'100%', marginBottom:'5px', background:'#8950fc'}}><i className="fas fa-eye"></i> Show Details</button>
+                    <input type="text" defaultValue={o.deliveryTime || ''} onBlur={(e) => updateOrder(key, 'deliveryTime', e.target.value)} style={{padding:'5px', width:'100%', marginBottom:'5px'}} placeholder="e.g. In 7 days"/>
+                    <button onClick={() => updateOrder(key, 'save', '')} className="btn-primary" style={{fontSize:'11px', width:'100%'}}><i className="fas fa-save"></i> Save</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody></table></div></div></div>
+        )}
+l-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
                   <img src={settings.avatar} style={{width:'80px', height:'80px', borderRadius:'50%', objectFit:'cover', border:'3px solid var(--primary)'}} alt="" />
                   <div><label>Upload Profile Picture</label><input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload=(ev)=>{setSettings({...settings, avatar: ev.target.result}); localStorage.setItem('rsAdminAvatar', ev.target.result); showToastMsg('Avatar updated');}; r.readAsDataURL(f); } }} style={{background:'transparent', border:'none', padding:0}} /></div>
                 </div>
