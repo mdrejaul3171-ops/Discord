@@ -4,7 +4,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Jost', sans-serif; transition: background 0.3s ease, color 0.3s ease, transform 0.1s ease; -webkit-tap-highlight-color: transparent; }
 button:active, .nav-item:active, .sidebar-brand:active, .card:active { transform: scale(0.999); opacity: 0.95; }
 
-body { display: flex; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; }
+body, #root { display: flex; width: 100%; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; }
 
 .auth-screen { position: fixed; inset: 0; background: #1e1e2d; display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .auth-box { background: var(--card-bg); padding: 40px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
