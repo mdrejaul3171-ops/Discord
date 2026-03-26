@@ -379,6 +379,35 @@ export default function App() {
 
 
 
+                {view === 'orders-view' && (
+          <div className="view-section active">
+            <div className="card">
+              <div className="card-header"><h3>Order Management</h3><button className="btn-primary" onClick={fetchData}>Refresh</button></div>
+              <div style={{overflowX: 'auto'}}>
+                <table>
+                  <thead><tr><th>Customer</th><th>Items & Total</th><th>Status</th><th>Delivery</th></tr></thead>
+                  <tbody>
+                    {Object.keys(orders).reverse().map(key => {
+                      const o = orders[key]; const sc = o.status === 'Pending' ? '#ffa800' : (o.status === 'Rejected' ? 'red' : '#1bc5bd');
+                      return (
+                        <tr key={key}>
+                          <td><b>{o.customerName}</b><br/><span style={{fontSize:'11px', color:'#888'}}>{o.phone}</span></td>
+                          <td>{o.items}<br/><b style={{color:'var(--primary)'}}>₹{o.totalAmount}</b></td>
+                          <td><select value={o.status} onChange={(e) => updateOrder(key, 'status', e.target.value)} style={{padding:'5px', border:`1px solid ${sc}`, fontWeight:'bold', borderRadius:'4px', marginBottom:'5px'}}><option value="Pending">Pending</option><option value="Accepted">Accepted</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Rejected">Rejected</option></select></td>
+                          <td>
+                            <button type="button" onClick={(e) => { e.preventDefault(); setModalData({ id: key, ...orders[key] }); setModalType('order-details'); }} className="btn-primary" style={{fontSize:'11px', width:'100%', marginBottom:'5px', background:'#8950fc'}}><i className="fas fa-eye"></i> Show Details</button>
+                            <input type="text" defaultValue={o.deliveryTime || ''} onBlur={(e) => updateOrder(key, 'deliveryTime', e.target.value)} style={{padding:'5px', width:'100%', marginBottom:'5px'}} placeholder="e.g. In 7 days"/>
+                            <button type="button" onClick={() => updateOrder(key, 'save', '')} className="btn-primary" style={{fontSize:'11px', width:'100%'}}><i className="fas fa-save"></i> Save</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
         
         
 
