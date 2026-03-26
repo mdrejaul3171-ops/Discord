@@ -331,12 +331,28 @@ export default function App() {
           </div></div></div>
         )}
 
+
+
+
         {view === 'settings-view' && (
           <div className="view-section active">
-            <div className="card"><div className="card-header"><h3>Admin Settings</h3></div><div className="form-grid">
-              <div className="form-group full-width" style={{display:'flex', alignItems:'center', gap:'20px'}}><img src={settings.avatar} style={{width:'80px', height:'80px', borderRadius:'50%', objectFit:'cover', border:'3px solid var(--primary)'}} alt="" /><div><label>Upload Profile Picture</label><input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload=(ev)=>{setSettings({...settings, avatar: ev.target.result}); localStorage.setItem('rsAdminAvatar', ev.target.result); showToastMsg('Avatar updated');}; r.readAsDataURL(f); } }} style={{background:'transparent', border:'none', padding:0}} /></div></div>
-              <div className="form-group full-width"><button className="btn-primary" onClick={()=>showToastMsg('Saved!', 'success')}>Save Store Configuration</button></div>
-            </div></div>
+            <div className="card">
+              <div className="card-header"><h3>Admin Settings</h3></div>
+              <div className="form-grid">
+                <div className="form-group full-width" style={{display:'flex', alignItems:'center', gap:'20px'}}>
+                  <img src={settings.avatar} style={{width:'80px', height:'80px', borderRadius:'50%', objectFit:'cover', border:'3px solid var(--primary)'}} alt="" />
+                  <div><label>Upload Profile Picture</label><input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload=(ev)=>{setSettings({...settings, avatar: ev.target.result}); localStorage.setItem('rsAdminAvatar', ev.target.result); showToastMsg('Avatar updated');}; r.readAsDataURL(f); } }} style={{background:'transparent', border:'none', padding:0}} /></div>
+                </div>
+                <div className="form-group"><label>Instagram Handle</label><input type="text" placeholder="e.g. rs_fashion_009" value={settings.insta || ''} onChange={e => setSettings({...settings, insta: e.target.value})} /></div>
+                <div className="form-group"><label>UPI ID (For Checkout)</label><input type="text" placeholder="yourname@upi" value={settings.upiId || ''} onChange={e => setSettings({...settings, upiId: e.target.value})} /></div>
+                <div className="form-group full-width"><button className="btn-primary" onClick={async () => { try { await fetch(DB_URL + 'settings.json', { method: 'PUT', body: JSON.stringify({ upiId: settings.upiId, insta: settings.insta }) }); showToastMsg('✅ Saved!', 'success'); } catch(e) {} }}>Save Store Configuration</button></div>
+              </div>
+            </div>
+            
+
+
+        
+      
             <div className="card" style={{marginTop:'20px', border:'1px solid #f64e60'}}><div className="card-header" style={{borderBottom:'1px solid rgba(246,78,96,0.2)'}}><h3 style={{color:'#f64e60'}}><i className="fas fa-exclamation-triangle"></i> Danger Zone: Wipe Data</h3></div><div className="form-grid">
               {!delPassState ? (
                 <div className="form-group full-width"><label>Set Secure Deletion Password</label><div style={{display:'flex', gap:'10px'}}><input type="password" id="new-del-pass" placeholder="Create a deletion password"/><button className="btn-primary" onClick={()=>{const p=document.getElementById('new-del-pass').value; if(p){localStorage.setItem('rsDeletePassword', p); setDelPassState(true); showToastMsg('Password Set!');}}}>Save</button></div></div>
