@@ -537,7 +537,9 @@ export default function App() {
         );
       })()}
 
+        }
 
+        
       {modalType === 'confirm' && modalData && (
         <div className="modal-overlay" style={{display:'flex'}}><div className="modal-content" style={{maxWidth:'350px', textAlign:'center'}}><div style={{fontSize:'40px', marginBottom:'15px'}}>🤔</div><h3 style={{marginBottom:'20px'}}>{modalData.msg}</h3><div style={{display:'flex', gap:'10px'}}><button className="btn-primary" style={{background:'#ccc', flex:1}} onClick={()=>setModalType(null)}>Cancel</button><button className="btn-primary" style={{background:'#f64e60', flex:1}} onClick={()=>{modalData.action(); setModalType(null);}}>Yes</button></div></div></div>
       )}
