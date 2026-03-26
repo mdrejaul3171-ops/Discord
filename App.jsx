@@ -278,7 +278,11 @@ export default function App() {
             </div>
           </div>
         )}
-        {view === 'add-product-view' && (
+
+
+
+
+                {view === 'add-product-view' && (
           <div className="view-section active">
             <div className="card">
               <div className="card-header"><h3>Publish Product</h3></div>
@@ -290,13 +294,37 @@ export default function App() {
                 <div className="form-group full-width"><label>Payment Mode</label><select id="p_paymentMode"><option value="Both">COD & UPI Allowed</option><option value="UPI Only">UPI Only (Prepaid / No COD)</option></select></div>
                 <div className="form-group"><label>Initial Stock</label><input type="number" id="p_stock" defaultValue="10"/></div>
                 <div className="form-group"><label>Status</label><select id="p_status"><option value="Active">Active</option><option value="Out of Stock">Out of Stock</option></select></div>
-                <div className="form-group full-width"><label>Product Images (Select up to 4)</label><div className="upload-area" onClick={()=>document.getElementById('p_images').click()}><i className="fas fa-images" style={{fontSize:'24px', color:'var(--primary)', marginBottom:'10px'}}></i><p>Tap here to browse files</p></div><input type="file" id="p_images" accept="image/*" multiple style={{display:'none'}} /></div>
+                <div className="form-group full-width">
+                  <label>Product Images (Select up to 4)</label>
+                  <div className="upload-area" onClick={()=>document.getElementById('p_images').click()}>
+                    <i className="fas fa-images" style={{fontSize:'24px', color:'var(--primary)', marginBottom:'10px'}}></i>
+                    <p>Tap here to browse files</p>
+                  </div>
+                  <input type="file" id="p_images" accept="image/*" multiple style={{display:'none'}} onChange={async (e) => {
+                    const files = e.target.files;
+                    if(files.length > 4) return showToastMsg("Max 4 images allowed!", "error");
+                    const pDiv = document.getElementById('multi-image-preview');
+                    if(pDiv) pDiv.innerHTML = '<p style="color:#888; margin-top:10px;">Processing images...</p>';
+                    let html = '';
+                    for(let i=0; i<files.length; i++) {
+                      let b64 = await new Promise(res => { const reader = new FileReader(); reader.onload = ev => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); res(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; }; reader.readAsDataURL(files[i]); });
+                      html += `<img src="${b64}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:2px solid var(--primary); margin-right:10px; margin-top:10px;">`;
+                    }
+                    if(pDiv) pDiv.innerHTML = html;
+                  }} />
+                  <div id="multi-image-preview" style={{display:'flex', flexWrap:'wrap', marginTop:'5px'}}></div>
+                </div>
                 <div className="form-group full-width"><button type="submit" id="submitBtn" className="btn-primary" style={{width:'100%', padding:'15px', fontSize: '16px'}}>Publish to Live Website</button></div>
               </form>
             </div>
           </div>
         )}
+        
+        
 
+
+
+        
         {view === 'orders-view' && (
           <div className="view-section active"><div className="card"><div className="card-header"><h3>Order Management</h3><button className="btn-primary" onClick={fetchData}>Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Customer</th><th>Items & Total</th><th>Status</th><th>Delivery</th></tr></thead><tbody>
             {Object.keys(orders).reverse().map(key => {
