@@ -4,8 +4,9 @@ import './index.css';
 const DB_URL = "https://virat-fashion-default-rtdb.firebaseio.com/";
 
 export default function App() {
-  const [isAuth, setIsAuth] = useState(localStorage.getItem('rsAdminLoggedIn') === 'true');
-  const [adminName, setAdminName] = useState(localStorage.getItem('rsAdminUsername') || 'Admin');
+  const [isAuth, setIsAuth] = useState(localStorage.getItem('viratAdminLoggedIn') === 'true');
+  const [adminName, setAdminName] = useState(localStorage.getItem('viratAdminUsername') || 'Admin');
+  
   const [authMode, setAuthMode] = useState('login');
   const [authUser, setAuthUser] = useState('');
   const [authPass, setAuthPass] = useState('');
@@ -13,12 +14,14 @@ export default function App() {
   
   const [view, setView] = useState('dashboard-view');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('rsDarkMode') === 'true');
+  const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('viratDarkMode') === 'true');
+  
   const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
 
   const [products, setProducts] = useState({});
   const [orders, setOrders] = useState({});
   const [users, setUsers] = useState({});
+  
   const [stats, setStats] = useState({ rev: 0, pending: 0, active: 0, cust: 0, units: 0, upi: 0, cod: 0 });
   const [chartData, setChartData] = useState([0,0,0,0,0,0,0]);
   
@@ -28,8 +31,8 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState({});
   const [adminChatInput, setAdminChatInput] = useState('');
   
-  const [settings, setSettings] = useState({ upiId: '', insta: '', avatar: localStorage.getItem('rsAdminAvatar') || 'https://via.placeholder.com/40' });
-  const [delPassState, setDelPassState] = useState(!!localStorage.getItem('rsDeletePassword'));
+  const [settings, setSettings] = useState({ upiId: '', insta: '', avatar: localStorage.getItem('viratAdminAvatar') || 'https://via.placeholder.com/40' });
+  const [delPassState, setDelPassState] = useState(!!localStorage.getItem('viratDeletePassword'));
   const [showResetDel, setShowResetDel] = useState(false);
   
   const [modalType, setModalType] = useState(null);
@@ -40,7 +43,7 @@ export default function App() {
   const chatEndRef = useRef(null);
 
   useEffect(() => { if (isDarkMode) document.body.classList.add('dark-mode'); else document.body.classList.remove('dark-mode'); }, [isDarkMode]);
-
+  
   useEffect(() => {
     if (isAuth) { fetchData(); fetchSettings(); fetchChatList(); const interval = setInterval(fetchChatList, 10000); return () => clearInterval(interval); }
   }, [isAuth]);
@@ -55,33 +58,55 @@ export default function App() {
 
   useEffect(() => { if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
 
-  const showToastMsg = (msg, type = 'success') => { setToast({ show: true, msg, type }); setTimeout(() => setToast({ show: false, msg: '', type: 'success' }), 3000); };
-
-  const handleAuth = async (e) => {
-    e.preventDefault(); if (!authUser || !authPass) return showToastMsg("Enter Username & Password", "error");
+  const showToastMsg = (msg, type = 'success') => { 
+    setToast({ show: true, msg, type });
+    setTimeout(() => setToast({ show: false, msg: '', type: 'success' }), 3000); 
+  };
+    const handleAuth = async (e) => {
+    e.preventDefault();
+    if (!authUser || !authPass) return showToastMsg("Enter Username & Password", "error");
     setAuthLoading(true);
     try {
-      if (authMode === 'login' && authUser === 'Raizo250' && authPass === 'Raizo250') { localStorage.setItem('rsAdminLoggedIn', 'true'); localStorage.setItem('rsAdminUsername', authUser); setIsAuth(true); setAdminName(authUser); setAuthLoading(false); return; }
-      const res = await fetch(DB_URL + 'admins.json'); const data = await res.json() || {}; const adminList = Object.values(data);
+      if (authMode === 'login' && authUser === 'ViratAdmin' && authPass === 'ViratAdmin') { 
+        localStorage.setItem('viratAdminLoggedIn', 'true');
+        localStorage.setItem('viratAdminUsername', authUser); 
+        setIsAuth(true); 
+        setAdminName(authUser); 
+        setAuthLoading(false); 
+        return; 
+      }
+      const res = await fetch(DB_URL + 'admins.json');
+      const data = await res.json() || {}; const adminList = Object.values(data);
       if (authMode === 'register') {
-        if (adminList.find(a => a.username === authUser) || authUser === 'Raizo250') { setAuthLoading(false); return showToastMsg("Username already taken!", "error"); }
-        await fetch(DB_URL + 'admins.json', { method: 'POST', body: JSON.stringify({username: authUser, password: authPass}) }); showToastMsg("Account Created! Please Login.", "success"); setAuthMode('login'); setAuthPass('');
+        if (adminList.find(a => a.username === authUser) || authUser === 'ViratAdmin') { 
+            setAuthLoading(false);
+            return showToastMsg("Username already taken!", "error"); 
+        }
+        await fetch(DB_URL + 'admins.json', { method: 'POST', body: JSON.stringify({username: authUser, password: authPass}) });
+        showToastMsg("Account Created! Please Login.", "success"); setAuthMode('login'); setAuthPass('');
       } else {
-        if (adminList.find(a => a.username === authUser && a.password === authPass)) { localStorage.setItem('rsAdminLoggedIn', 'true'); localStorage.setItem('rsAdminUsername', authUser); setIsAuth(true); setAdminName(authUser); } 
+        if (adminList.find(a => a.username === authUser && a.password === authPass)) { 
+            localStorage.setItem('viratAdminLoggedIn', 'true');
+            localStorage.setItem('viratAdminUsername', authUser); 
+            setIsAuth(true); 
+            setAdminName(authUser); 
+        } 
         else { showToastMsg("❌ Incorrect Credentials!", "error"); }
       }
     } catch(e) { showToastMsg("Error connecting to server", "error"); }
     setAuthLoading(false);
   };
 
-  const handleLogout = () => { localStorage.removeItem('rsAdminLoggedIn'); localStorage.removeItem('rsAdminUsername'); setIsAuth(false); };
+  const handleLogout = () => { localStorage.removeItem('viratAdminLoggedIn'); localStorage.removeItem('viratAdminUsername'); setIsAuth(false); };
 
   const fetchData = async () => {
     try {
       let [pRes, uRes, oRes] = await Promise.all([fetch(DB_URL + 'products.json'), fetch(DB_URL + 'users.json'), fetch(DB_URL + 'orders.json')]);
       let pData = await pRes.json() || {}; let uData = await uRes.json() || {}; let oData = await oRes.json() || {};
       setProducts(pData); setUsers(uData); setOrders(oData);
+      
       let initialStocks = {}; Object.keys(pData).forEach(k => initialStocks[k] = pData[k].stock); setStockInputs(initialStocks);
+      
       let rev = 0, pend = 0, units = 0, upi = 0, cod = 0; let cData = [0,0,0,0,0,0,0];
       Object.keys(oData).forEach((key, i) => {
         let o = oData[key];
@@ -99,46 +124,85 @@ export default function App() {
     const newStock = parseInt(stockInputs[id]);
     if (isNaN(newStock) || newStock < 0) return showToastMsg("Invalid stock value", "error");
     const newStatus = newStock > 0 ? 'Active' : 'Out of Stock';
-    try { await fetch(DB_URL + 'products/' + id + '.json', { method: 'PATCH', body: JSON.stringify({ stock: newStock, status: newStatus }) }); showToastMsg("Stock updated!", "success"); fetchData(); } catch(e) { showToastMsg("Failed to update stock", "error"); }
+    try { 
+        await fetch(DB_URL + 'products/' + id + '.json', { method: 'PATCH', body: JSON.stringify({ stock: newStock, status: newStatus }) });
+        showToastMsg("Stock updated!", "success"); fetchData(); 
+    } catch(e) { showToastMsg("Failed to update stock", "error"); }
   };
 
-  const updateOrder = async (id, field, value) => { if (field === 'save') return showToastMsg("Order updated!", "success"); try { await fetch(DB_URL + 'orders/' + id + '.json', { method: 'PATCH', body: JSON.stringify({ [field]: value }) }); fetchData(); } catch(e) {} };
-
+  const updateOrder = async (id, field, value) => { 
+      if (field === 'save') return showToastMsg("Order updated!", "success");
+      try { await fetch(DB_URL + 'orders/' + id + '.json', { method: 'PATCH', body: JSON.stringify({ [field]: value }) }); fetchData();
+      } catch(e) {} 
+  };
 
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
     const imageInput = document.getElementById('p_images');
     if (!imageInput.files || imageInput.files.length === 0) return showToastMsg("⚠️ Select at least 1 image!", "error");
-    const btn = document.getElementById('submitBtn'); btn.innerHTML = "Uploading..."; btn.disabled = true;
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = "Uploading..."; btn.disabled = true;
     try {
       let b64Array = [];
       for (let i = 0; i < imageInput.files.length; i++) {
         let b64 = await new Promise((res) => { const reader = new FileReader(); reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); res(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; }; reader.readAsDataURL(imageInput.files[i]); });
         b64Array.push(b64);
       }
-      const productData = { name: document.getElementById('p_name').value, price: parseInt(document.getElementById('p_price').value), discount: document.getElementById('p_discount').value || 0, coupon: document.getElementById('p_coupon').value || "", paymentMode: document.getElementById('p_paymentMode').value, stock: parseInt(document.getElementById('p_stock').value), status: document.getElementById('p_status').value, img: b64Array[0], gallery: b64Array };
+      const productData = { 
+          name: document.getElementById('p_name').value, 
+          price: parseInt(document.getElementById('p_price').value), 
+          discount: document.getElementById('p_discount').value || 0, 
+          coupon: document.getElementById('p_coupon').value || "", 
+          paymentMode: document.getElementById('p_paymentMode').value, 
+          size: document.getElementById('p_size').value, 
+          stock: parseInt(document.getElementById('p_stock').value), 
+          status: document.getElementById('p_status').value, 
+          img: b64Array[0], 
+          gallery: b64Array 
+      };
       await fetch(DB_URL + 'products.json', { method: 'POST', body: JSON.stringify(productData) });
       showToastMsg("🎉 Product Published!", "success"); e.target.reset(); 
-      const previewDiv = document.getElementById('multi-image-preview'); if(previewDiv) previewDiv.innerHTML = '';
+      const previewDiv = document.getElementById('multi-image-preview');
+      if(previewDiv) previewDiv.innerHTML = '';
       fetchData(); setView('products-view');
     } catch (err) { showToastMsg("Error publishing product", "error"); }
     btn.innerHTML = "Publish to Live Website"; btn.disabled = false;
   };
 
   const fetchChatList = async () => { try { let res = await fetch(DB_URL + 'chats.json'); let data = await res.json(); if(data) setChats(data); if(activeChatUserId) fetchAdminMessages(activeChatUserId); } catch(e) {} };
+  
   const fetchAdminMessages = async (userId) => { try { let res = await fetch(`${DB_URL}chats/${userId}/messages.json`); let msgs = await res.json(); if(msgs) setChatMessages(msgs); } catch(e) {} };
-  const sendAdminMessage = async () => { if (!adminChatInput.trim() || !activeChatUserId) return; const msg = adminChatInput.trim(); setAdminChatInput(''); try { await fetch(`${DB_URL}chats/${activeChatUserId}/messages.json`, { method: 'POST', body: JSON.stringify({ sender: 'admin', text: msg, timestamp: Date.now(), status: 'sent' }) }); fetchAdminMessages(activeChatUserId); } catch(e) {} };
+  
+  const sendAdminMessage = async () => { 
+      if (!adminChatInput.trim() || !activeChatUserId) return;
+      const msg = adminChatInput.trim(); setAdminChatInput(''); 
+      try { await fetch(`${DB_URL}chats/${activeChatUserId}/messages.json`, { method: 'POST', body: JSON.stringify({ sender: 'admin', text: msg, timestamp: Date.now(), status: 'sent' }) });
+      fetchAdminMessages(activeChatUserId); } catch(e) {} 
+  };
+  
   const fetchSettings = async () => { try { let res = await fetch(DB_URL + 'settings.json'); let data = await res.json(); if(data) setSettings(s => ({...s, upiId: data.upiId || '', insta: data.insta || ''})); } catch(e) {} };
-  const handleDangerAction = async () => { if (document.getElementById('delete-auth-pass').value !== localStorage.getItem('rsDeletePassword')) return showToastMsg("❌ Incorrect Password", "error"); setModalType(null); showToastMsg("⏳ Deleting...", "info"); try { if(modalData === 'orders' || modalData === 'all') await fetch(DB_URL + 'orders.json', { method: 'DELETE' }); if(modalData === 'users' || modalData === 'all') await fetch(DB_URL + 'users.json', { method: 'DELETE' }); showToastMsg("✅ Data wiped!", "success"); fetchData(); } catch(e) {} };
+  
+  const handleDangerAction = async () => { 
+      if (document.getElementById('delete-auth-pass').value !== localStorage.getItem('viratDeletePassword')) return showToastMsg("❌ Incorrect Password", "error");
+      setModalType(null); showToastMsg("⏳ Deleting...", "info"); 
+      try { 
+          if(modalData === 'orders' || modalData === 'all') await fetch(DB_URL + 'orders.json', { method: 'DELETE' });
+          if(modalData === 'users' || modalData === 'all') await fetch(DB_URL + 'users.json', { method: 'DELETE' }); 
+          showToastMsg("✅ Data wiped!", "success"); fetchData();
+      } catch(e) {} 
+  };
+
+
 
   if (!isAuth) {
     return (
       <div className="auth-screen">
-        <div className="auth-box"><h2 style={{fontFamily: 'Playfair Display', marginBottom: '20px', color: 'var(--text-main)'}}>{authMode === 'login' ? 'RS Admin Login' : 'Admin Registration'}</h2>
+        <div className="auth-box"><h2 style={{fontFamily: 'Playfair Display', marginBottom: '20px', color: 'var(--text-main)'}}>{authMode === 'login' ? 'Virat Fashion Admin Login' : 'Admin Registration'}</h2>
           <form onSubmit={handleAuth}><input type="text" className="auth-input" placeholder={authMode === 'login' ? 'Admin Username' : 'Choose Username'} value={authUser} onChange={e=>setAuthUser(e.target.value)} /><input type="password" className="auth-input" placeholder={authMode === 'login' ? 'Password' : 'Choose Password'} value={authPass} onChange={e=>setAuthPass(e.target.value)} /><button type="submit" className="auth-btn">{authLoading ? 'Processing...' : (authMode === 'login' ? 'Secure Login' : 'Create Account')}</button></form>
           <p style={{marginTop: '15px', fontSize: '13px', color: '#888', cursor: 'pointer', textDecoration: 'underline'}} onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>{authMode === 'login' ? 'New Admin? Create Account' : 'Already have an account? Login'}</p>
-        </div><div className={`toast ${toast.show ? 'show' : ''} toast-${toast.type}`}><span>{toast.msg}</span></div>
+        </div>
+        <div className={`toast ${toast.show ? 'show' : ''} toast-${toast.type}`}><span>{toast.msg}</span></div>
       </div>
     );
   }
@@ -146,7 +210,7 @@ export default function App() {
   return (
     <>
       <div className="sidebar" style={{left: window.innerWidth <= 768 && !isSidebarOpen ? '-260px' : '0'}}>
-        <div className="sidebar-brand">RS ADMIN</div>
+        <div className="sidebar-brand">VIRAT FASHION</div>
         <div style={{padding: '20px 0'}}>
           <div className={`nav-item ${view==='dashboard-view'?'active':''}`} onClick={()=>{setView('dashboard-view'); setIsSidebarOpen(false);}}><i className="fas fa-chart-line" style={{width:'25px'}}></i> Dashboard</div>
           <div className={`nav-item ${view==='analytics-view'?'active':''}`} onClick={()=>{setView('analytics-view'); setIsSidebarOpen(false);}}><i className="fas fa-chart-pie" style={{width:'25px'}}></i> Analytics</div>
@@ -160,14 +224,11 @@ export default function App() {
         </div>
       </div>
 
-
-
-
       <div className="main-content">
         <div className="header">
           <div style={{display:'flex', alignItems:'center', gap:'15px'}}><i className="fas fa-bars" style={{fontSize: '20px', cursor: 'pointer', display: window.innerWidth <= 768 ? 'block' : 'none'}} onClick={() => setIsSidebarOpen(!isSidebarOpen)}></i><h3 style={{textTransform:'capitalize'}}>{view.replace('-view', '').replace('-', ' ')}</h3></div>
           <div style={{display:'flex', alignItems:'center', gap:'20px'}}>
-            <i className={isDarkMode ? 'fas fa-sun' : 'fas fa-moon'} style={{fontSize: '20px', cursor: 'pointer'}} onClick={() => {setIsDarkMode(!isDarkMode); localStorage.setItem('rsDarkMode', !isDarkMode);}}></i>
+            <i className={isDarkMode ? 'fas fa-sun' : 'fas fa-moon'} style={{fontSize: '20px', cursor: 'pointer'}} onClick={() => {setIsDarkMode(!isDarkMode); localStorage.setItem('viratDarkMode', !isDarkMode);}}></i>
             <div style={{fontWeight: 'bold', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => setView('settings-view')}><img src={settings.avatar} style={{width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)'}} alt=""/><span>{adminName}</span></div>
           </div>
         </div>
@@ -191,15 +252,16 @@ export default function App() {
             <div className="stat-card" style={{background: 'rgba(255, 168, 0, 0.1)', border: '1px solid #ffa800'}}><div><p style={{color:'#ffa800', fontWeight:'bold'}}>COD Value (Pending/Collected)</p><h3 style={{color:'#ffa800'}}>₹{stats.cod.toLocaleString()}</h3></div><i className="fas fa-money-bill-wave" style={{fontSize:'30px', color:'#ffa800'}}></i></div>
           </div></div></div>
         )}
+                                                                                                                                               
 
         {view === 'products-view' && (
-          <div className="view-section active"><div className="card"><div className="card-header"><h3>Live Inventory</h3><button className="btn-primary" onClick={fetchData}><i className="fas fa-sync"></i> Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Image</th><th>Name & Mode</th><th>Price</th><th>Stock Status</th><th>Action</th></tr></thead><tbody>
+          <div className="view-section active"><div className="card"><div className="card-header"><h3>Live Inventory</h3><button className="btn-primary" onClick={fetchData}><i className="fas fa-sync"></i> Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Image</th><th>Name & Details</th><th>Price</th><th>Stock Status</th><th>Action</th></tr></thead><tbody>
             {Object.keys(products).reverse().map(key => {
               const p = products[key];
               return (
                 <tr key={key}>
                   <td><img src={p.img} style={{width:'40px', height:'40px', borderRadius:'5px'}} alt=""/></td>
-                  <td><b>{p.name}</b><br/><span style={{fontSize:'11px'}}>Mode: {p.paymentMode||'Both'}</span></td>
+                  <td><b>{p.name}</b><br/><span style={{fontSize:'11px'}}>Mode: {p.paymentMode||'Both'} <br/> Size: {p.size||'N/A'}</span></td>
                   <td>₹{p.price}</td>
                   <td><b>{p.stock} units</b><br/><span style={{color: p.status==='Active'?'#1bc5bd':'#f64e60', fontWeight:'bold'}}>● {p.status==='Active'?'In Stock':'Out of Stock'}</span></td>
                   <td>
@@ -217,15 +279,21 @@ export default function App() {
             <div className="form-group"><label>Product Name</label><input type="text" id="p_name" required/></div>
             <div className="form-group"><label>Selling Price (₹)</label><input type="number" id="p_price" required/></div>
             <div className="form-group"><label>Discount (%)</label><input type="number" id="p_discount" placeholder="e.g. 20"/></div>
-            <div className="form-group"><label>Coupon Code</label><input type="text" id="p_coupon" placeholder="e.g. RS178K"/></div>
-            <div className="form-group full-width"><label>Payment Mode</label><select id="p_paymentMode"><option value="Both">COD & UPI Allowed</option><option value="UPI Only">UPI Only (Prepaid / No COD)</option></select></div>
+            <div className="form-group"><label>Coupon Code</label><input type="text" id="p_coupon" placeholder="e.g. VIRAT10"/></div>
+            
+            <div className="form-group"><label>Size</label><select id="p_size"><option value="Free Size">Free Size</option><option value="S">Small (S)</option><option value="M">Medium (M)</option><option value="L">Large (L)</option><option value="XL">Extra Large (XL)</option><option value="XXL">XXL</option></select></div>
+            <div className="form-group"><label>Payment Mode</label><select id="p_paymentMode"><option value="Both">COD & UPI Allowed</option><option value="UPI Only">UPI Only (Prepaid / No COD)</option></select></div>
+
             <div className="form-group"><label>Initial Stock</label><input type="number" id="p_stock" defaultValue="10"/></div>
             <div className="form-group"><label>Status</label><select id="p_status"><option value="Active">Active</option><option value="Out of Stock">Out of Stock</option></select></div>
             <div className="form-group full-width"><label>Product Images (Select up to 4)</label><div className="upload-area" onClick={()=>document.getElementById('p_images').click()}><i className="fas fa-images" style={{fontSize:'24px', color:'var(--primary)', marginBottom:'10px'}}></i><p>Tap here to browse files</p></div>
               <input type="file" id="p_images" accept="image/*" multiple style={{display:'none'}} onChange={async (e) => {
-                const files = e.target.files; if(files.length > 4) return showToastMsg("Max 4 images allowed!", "error");
+                const files = e.target.files;
+                if(files.length > 4) return showToastMsg("Max 4 images allowed!", "error");
                 const pDiv = document.getElementById('multi-image-preview'); if(pDiv) pDiv.innerHTML = '<p style="color:#888; margin-top:10px;">Processing images...</p>';
-                let html = ''; for(let i=0; i<files.length; i++) { let b64 = await new Promise(res => { const reader = new FileReader(); reader.onload = ev => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); res(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; }; reader.readAsDataURL(files[i]); }); html += `<img src="${b64}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:2px solid var(--primary); margin-right:10px; margin-top:10px;">`; }
+                let html = ''; for(let i=0; i<files.length; i++) { let b64 = await new Promise(res => { const reader = new FileReader(); reader.onload = ev => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 500 / img.width; canvas.width = 500; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); res(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; }; reader.readAsDataURL(files[i]); });
+                html += `<img src="${b64}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:2px solid var(--primary); margin-right:10px; margin-top:10px;">`;
+                }
                 if(pDiv) pDiv.innerHTML = html;
               }} />
               <div id="multi-image-preview" style={{display:'flex', flexWrap:'wrap', marginTop:'5px'}}></div>
@@ -234,11 +302,7 @@ export default function App() {
           </form></div></div>
         )}
 
-
-
-
-
-                {view === 'orders-view' && (
+        {view === 'orders-view' && (
           <div className="view-section active"><div className="card"><div className="card-header"><h3>Order Management</h3><button className="btn-primary" onClick={fetchData}>Refresh</button></div><div style={{overflowX: 'auto'}}><table><thead><tr><th>Customer</th><th>Items & Total</th><th>Status</th><th>Delivery</th></tr></thead><tbody>
             {Object.keys(orders).reverse().map(key => {
               const o = orders[key]; const sc = o.status === 'Pending' ? '#ffa800' : (o.status === 'Rejected' ? 'red' : '#1bc5bd');
@@ -274,17 +338,17 @@ export default function App() {
             </div>
           </div></div></div>
         )}
-
+                                                                                                                                                                                                                                                
         {view === 'settings-view' && (
           <div className="view-section active">
             <div className="card"><div className="card-header"><h3>Admin Settings</h3></div><div className="form-grid">
-              <div className="form-group full-width" style={{display:'flex', alignItems:'center', gap:'20px'}}><img src={settings.avatar} style={{width:'80px', height:'80px', borderRadius:'50%', objectFit:'cover', border:'3px solid var(--primary)'}} alt="" /><div><label>Upload Profile Picture</label><input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload=(ev)=>{setSettings({...settings, avatar: ev.target.result}); localStorage.setItem('rsAdminAvatar', ev.target.result); showToastMsg('Avatar updated');}; r.readAsDataURL(f); } }} style={{background:'transparent', border:'none', padding:0}} /></div></div>
-              <div className="form-group"><label>Instagram Handle</label><input type="text" placeholder="e.g. rs_fashion_009" value={settings.insta} onChange={e => setSettings({...settings, insta: e.target.value})} /></div>
+              <div className="form-group full-width" style={{display:'flex', alignItems:'center', gap:'20px'}}><img src={settings.avatar} style={{width:'80px', height:'80px', borderRadius:'50%', objectFit:'cover', border:'3px solid var(--primary)'}} alt="" /><div><label>Upload Profile Picture</label><input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload=(ev)=>{setSettings({...settings, avatar: ev.target.result}); localStorage.setItem('viratAdminAvatar', ev.target.result); showToastMsg('Avatar updated');}; r.readAsDataURL(f); } }} style={{background:'transparent', border:'none', padding:0}} /></div></div>
+              <div className="form-group"><label>Instagram Handle</label><input type="text" placeholder="e.g. virat_fashion_official" value={settings.insta} onChange={e => setSettings({...settings, insta: e.target.value})} /></div>
               <div className="form-group"><label>UPI ID (For Checkout)</label><input type="text" placeholder="yourname@upi" value={settings.upiId} onChange={e => setSettings({...settings, upiId: e.target.value})} /></div>
               <div className="form-group full-width"><button className="btn-primary" onClick={async () => { try { await fetch(DB_URL + 'settings.json', { method: 'PUT', body: JSON.stringify({ upiId: settings.upiId, insta: settings.insta }) }); showToastMsg('✅ Saved!', 'success'); } catch(e) {} }}>Save Store Configuration</button></div>
             </div></div>
             <div className="card" style={{marginTop:'20px', border:'1px solid #f64e60'}}><div className="card-header" style={{borderBottom:'1px solid rgba(246,78,96,0.2)'}}><h3 style={{color:'#f64e60'}}><i className="fas fa-exclamation-triangle"></i> Danger Zone: Wipe Data</h3></div><div className="form-grid">
-              {!delPassState ? (<div className="form-group full-width"><label>Set Secure Deletion Password</label><div style={{display:'flex', gap:'10px'}}><input type="password" id="new-del-pass" placeholder="Create a deletion password"/><button className="btn-primary" onClick={()=>{const p=document.getElementById('new-del-pass').value; if(p){localStorage.setItem('rsDeletePassword', p); setDelPassState(true); showToastMsg('Password Set!');}}}>Save</button></div></div>) : showResetDel ? (<div className="form-group full-width" style={{background:'rgba(246,78,96,0.05)', padding:'15px', borderRadius:'8px'}}><label style={{color:'#f64e60', fontWeight:'bold', marginBottom:'10px'}}>Reset Deletion Password</label><input type="text" id="r-u" placeholder="Admin Username" style={{marginBottom:'10px'}}/><input type="password" id="r-p" placeholder="Admin Login Password" style={{marginBottom:'10px'}}/><input type="password" id="r-n" placeholder="New Deletion Password" style={{marginBottom:'10px'}}/><button className="btn-primary" style={{background:'#f64e60'}} onClick={async ()=>{const u=document.getElementById('r-u').value, p=document.getElementById('r-p').value, n=document.getElementById('r-n').value; if(u==='Raizo250'&&p==='Raizo250'){localStorage.setItem('rsDeletePassword',n); showToastMsg('Reset!'); setShowResetDel(false);}else{const res=await fetch(DB_URL+'admins.json');const data=await res.json()||{}; if(Object.values(data).find(a=>a.username===u&&a.password===p)){localStorage.setItem('rsDeletePassword',n); showToastMsg('Reset!'); setShowResetDel(false);}else showToastMsg('Invalid Credentials', 'error');}}}>Reset</button><div style={{textAlign:'right', marginTop:'10px'}}><a href="#" onClick={(e)=>{e.preventDefault();setShowResetDel(false);}} style={{color:'#888', fontSize:'12px'}}>Cancel</a></div></div>) : (<><div className="form-group full-width" style={{display:'flex', gap:'10px', flexWrap:'wrap'}}><button className="btn-primary" style={{background:'#ffa800', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('orders');}}><i className="fas fa-trash"></i> Wipe Orders</button><button className="btn-primary" style={{background:'#8950fc', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('users');}}><i className="fas fa-users-slash"></i> Wipe Customers</button><button className="btn-primary" style={{background:'#f64e60', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('all');}}><i className="fas fa-skull-crossbones"></i> Factory Reset</button></div><div className="form-group full-width" style={{textAlign:'right', marginTop:'-10px'}}><a href="#" onClick={(e)=>{e.preventDefault();setShowResetDel(true);}} style={{color:'#888', fontSize:'12px', textDecoration:'underline'}}>Forgot Deletion Password?</a></div></>)}
+              {!delPassState ? (<div className="form-group full-width"><label>Set Secure Deletion Password</label><div style={{display:'flex', gap:'10px'}}><input type="password" id="new-del-pass" placeholder="Create a deletion password"/><button className="btn-primary" onClick={()=>{const p=document.getElementById('new-del-pass').value; if(p){localStorage.setItem('viratDeletePassword', p); setDelPassState(true); showToastMsg('Password Set!');}}}>Save</button></div></div>) : showResetDel ? (<div className="form-group full-width" style={{background:'rgba(246,78,96,0.05)', padding:'15px', borderRadius:'8px'}}><label style={{color:'#f64e60', fontWeight:'bold', marginBottom:'10px'}}>Reset Deletion Password</label><input type="text" id="r-u" placeholder="Admin Username" style={{marginBottom:'10px'}}/><input type="password" id="r-p" placeholder="Admin Login Password" style={{marginBottom:'10px'}}/><input type="password" id="r-n" placeholder="New Deletion Password" style={{marginBottom:'10px'}}/><button className="btn-primary" style={{background:'#f64e60'}} onClick={async ()=>{const u=document.getElementById('r-u').value, p=document.getElementById('r-p').value, n=document.getElementById('r-n').value; if(u==='ViratAdmin'&&p==='ViratAdmin'){localStorage.setItem('viratDeletePassword',n); showToastMsg('Reset!'); setShowResetDel(false);}else{const res=await fetch(DB_URL+'admins.json');const data=await res.json()||{}; if(Object.values(data).find(a=>a.username===u&&a.password===p)){localStorage.setItem('viratDeletePassword',n); showToastMsg('Reset!'); setShowResetDel(false);}else showToastMsg('Invalid Credentials', 'error');}}}>Reset</button><div style={{textAlign:'right', marginTop:'10px'}}><a href="#" onClick={(e)=>{e.preventDefault();setShowResetDel(false);}} style={{color:'#888', fontSize:'12px'}}>Cancel</a></div></div>) : (<><div className="form-group full-width" style={{display:'flex', gap:'10px', flexWrap:'wrap'}}><button className="btn-primary" style={{background:'#ffa800', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('orders');}}><i className="fas fa-trash"></i> Wipe Orders</button><button className="btn-primary" style={{background:'#8950fc', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('users');}}><i className="fas fa-users-slash"></i> Wipe Customers</button><button className="btn-primary" style={{background:'#f64e60', flex:1}} onClick={()=>{setModalType('delete-auth'); setModalData('all');}}><i className="fas fa-skull-crossbones"></i> Factory Reset</button></div><div className="form-group full-width" style={{textAlign:'right', marginTop:'-10px'}}><a href="#" onClick={(e)=>{e.preventDefault();setShowResetDel(true);}} style={{color:'#888', fontSize:'12px', textDecoration:'underline'}}>Forgot Deletion Password?</a></div></>)}
             </div></div>
           </div>
         )}
@@ -313,6 +377,8 @@ export default function App() {
       <div className={`toast ${toast.show ? 'show' : ''} toast-${toast.type}`}><span>{toast.msg}</span></div>
     </>
   );
-              }
-                                                                                
-      
+            }
+              
+
+        
+        
