@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
 
-const DB_URL = "https://leon-41242-default-rtdb.firebaseio.com/";
+const DB_URL = "https://virat-fashion-default-rtdb.firebaseio.com/";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(localStorage.getItem('rsAdminLoggedIn') === 'true');
